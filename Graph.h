@@ -1,0 +1,142 @@
+#include <Adafruit_GFX.h>
+#include <SPI.h>
+#include <Wire.h>
+#include <Adafruit_ILI9341.h>
+#include <Adafruit_STMPE610.h>
+#include <SPI.h>
+
+#define LTBLUE    0xB6DF
+#define LTTEAL    0xBF5F
+#define LTGREEN   0xBFF7
+#define LTCYAN    0xC7FF
+#define LTRED     0xFD34
+#define LTMAGENTA 0xFD5F
+#define LTYELLOW  0xFFF8
+#define LTORANGE  0xFE73
+#define LTPINK    0xFDDF
+#define LTPURPLE  0xCCFF
+#define LTGREY    0xE71C
+
+#define BLUE      0x001F
+#define TEAL      0x0438
+#define GREEN     0x07E0
+#define CYAN      0x07FF
+#define RED       0xF800
+#define MAGENTA   0xF81F
+#define YELLOW    0xFFE0
+#define ORANGE    0xFD20
+#define PINK      0xF81F
+#define PURPLE    0x801F
+#define GREY      0xC618
+#define WHITE     0xFFFF
+#define BLACK     0x0000
+
+#define DKBLUE    0x000D
+#define DKTEAL    0x020C
+#define DKGREEN   0x03E0
+#define DKCYAN    0x03EF
+#define DKRED     0x6000
+#define DKMAGENTA 0x8008
+#define DKYELLOW  0x8400
+#define DKORANGE  0x8200
+#define DKPINK    0x9009
+#define DKPURPLE  0x4010
+#define DKGREY    0x4A49
+
+#define TFT_CS   10
+#define TFT_DC   9
+#define ADJ_PIN  A0
+
+double a1, b1, c1, d1, r2, r1, vo, tempC, tempF, tempK;
+
+double volts;
+double bvolts;
+double pmvolts;
+
+boolean display1 = true;
+boolean display2 = true;
+boolean display3 = true;
+boolean display4 = true;
+boolean display5 = true;
+boolean display6 = true;
+boolean display7 = true;
+boolean display8 = true;
+boolean display9 = true;
+double ox, oy;
+
+Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
+
+void Graph(Adafruit_ILI9341 &d, double x, double y, double gx, double gy, double w, double h, double xlo, double xhi, double xinc, double ylo, double yhi, double yinc, String title, String xlabel, String ylabel, unsigned int gcolor, unsigned int acolor, unsigned int pcolor, unsigned int tcolor, unsigned int bcolor, boolean &redraw) {
+  double ydiv, xdiv;
+  static double ox = (x - xlo) * w / (xhi - xlo) + gx;
+  static double oy = (y - ylo) * (gy - h - gy) / (yhi - ylo) + gy;
+  double i;
+  double temp;
+
+  if (redraw == true) {
+    redraw = false;
+    ox = (x - xlo) * w / (xhi - xlo) + gx;
+    oy = (y - ylo) * (gy - h - gy) / (yhi - ylo) + gy;
+
+    // draw y scale
+    for (i = ylo; i <= yhi; i += yinc) {
+      // compute the transform
+      temp = (i - ylo) * (gy - h - gy) / (yhi - ylo) + gy;
+
+      if (i == 0) {
+        d.drawLine(gx, temp, gx + w, temp, acolor);
+      } else {
+        d.drawLine(gx, temp, gx + w, temp, gcolor);
+      }
+
+      d.setTextSize(1);
+      d.setTextColor(tcolor, bcolor);
+      d.setCursor(gx - 40, temp);
+      // precision is default Arduino--this could really use some format control
+      d.println(i);
+    }
+    // draw x scale
+    for (i = xlo; i <= xhi; i += xinc) {
+      // compute the transform
+      temp = (i - xlo) * w / (xhi - xlo) + gx;
+      if (i == 0) {
+        d.drawLine(temp, gy, temp, gy - h, acolor);
+      } else {
+        d.drawLine(temp, gy, temp, gy - h, gcolor);
+      }
+
+      d.setTextSize(1);
+      d.setTextColor(tcolor, bcolor);
+      d.setCursor(temp, gy + 10);
+      // precision is default Arduino--this could really use some format control
+      d.println(i);
+    }
+
+    // now draw the labels
+    d.setTextSize(2);
+    d.setTextColor(tcolor, bcolor);
+    d.setCursor(gx, gy - h - 30);
+    d.println(title);
+
+    d.setTextSize(1);
+    d.setTextColor(acolor, bcolor);
+    d.setCursor(gx, gy + 20);
+    d.println(xlabel);
+
+    d.setTextSize(1);
+    d.setTextColor(acolor, bcolor);
+    d.setCursor(gx - 30, gy - h - 10);
+    d.println(ylabel);
+  }
+
+  // graph drawn now plot the data
+  // the entire plotting code are these few lines...
+  // recall that ox and oy are initialized as static above
+  x = (x - xlo) * w / (xhi - xlo) + gx;
+  y = (y - ylo) * (gy - h - gy) / (yhi - ylo) + gy;
+  d.drawLine(ox, oy, x, y, pcolor);
+  d.drawLine(ox, oy + 1, x, y + 1, pcolor);
+  d.drawLine(ox, oy - 1, x, y - 1, pcolor);
+  ox = x;
+  oy = y;
+}
