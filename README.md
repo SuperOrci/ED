@@ -53,6 +53,6 @@ The system provides granular control over measurements:
 
 ## 💻 Arduino Code
 
-The full Arduino sketch and module files are located in arduino code.
+The full Arduino sketch and module files are located in arduino folder.
 
 
